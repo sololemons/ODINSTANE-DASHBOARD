@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ODINSTAN DASHBBOARD</title>
+   <link rel="stylesheet" href="css/bootstrap.css">
+   <link rel="stylesheet" href="ODINSTANE.css">
+</head>
+<body>
+
+  <script src="js/bootstrap.js"></script>
+
+  
+
+
+    
+<h1>ODINSTAN DASHBOARD</h1>
+
+    
+    <button id="createFormButton"class="btn btn-outline-primary">Create</button>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <span id="closeCreateModal" style="cursor: pointer;">&times;</span>
+    <h2>Create Person</h2>
+        <form id="dataForm">
+            <label for="id">ID:</label>
+            <input type="text" id="id" name="id" required><br><br>
+
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required><br><br>
+
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" required><br><br>
+
+            <label for="state">State:</label>
+            <input type="text" id="state" name="state" required><br><br>
+
+            <label for="age">Age:</label>
+            <input type="text" id="age" name="age" required><br><br>
+
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</div>
+       
+
+
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal">&times;</span>
+        <h2>Edit Person</h2>
+        <form id="editForm">
+            <label for="editid">ID:</label>
+            <input type="text" id="editid" name="editid" readonly><br>
+
+            <label for="editlast_name">Last Name:</label>
+            <input type="text" id="editlast_name" name="editlast_name"><br>
+
+            <label for="editfirst_name">First Name:</label>
+            <input type="text" id="editfirst_name" name="editfirst_name"><br>
+
+            <label for="editstate">State:</label>
+            <input type="text" id="editstate" name="editstate"><br>
+
+            <label for="editage">Age:</label>
+            <input type="text" id="editage" name="editage"><br>
+
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</div>
+
+
+
+<div class="modal " id="deletionModal">
+    <div class="modal-content">
+
+<p>Are You Sure You Want To Delete This Person</p>
+<button id="confirmDelete">Yes</button>
+<button id ="cancelDelete">No</button>
+
+    </div>
+</div>
+
+    
+    <div class="container-lg my-5">
+        <table border="5">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Last Name</th>
+                <th>First Name</th>
+                <th>Age</th>
+                <th>State</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="dataTableBody">
+            <!-- Data will be displayed here -->
+        </tbody>
+    </table>
+</div>
+
+    <script>
+
+//first We populate The Table With The Elements In My API Then We continue With the Crud Operations
+
+document.addEventListener('contentLoaded',fetchAndPopulateTable());
+
+async function fetchAndPopulateTable() 
+{
+    try{
+
+        const dataFromAPI=await fetch('http://localhost:8080/api/v1/leute');
+        if(dataFromAPI.ok){
+            const data=await dataFromAPI.json();
+            populateTable(data);
+        }
+        else{
+            console.error("Failed To fetch Data From the API",error);
+        }
+    }
+    catch(error){
+        console.error("Error Fetching Data From The API",error);
+    }
+    
+}
+
+function populateTable(data){
+
+    const dataTable=document.getElementById('dataTableBody');
+
+    data.forEach(person =>{
+
+        const Rowes =dataTableBody.insertRow();
+        //for Id
+        const cell1= Rowes.insertCell(0);
+        //for lastName
+        const cell2 =Rowes.insertCell(1);
+        // for firstNmae
+        const cell3 =Rowes.insertCell(2);
+        // for State
+        const cell4 =Rowes.insertCell(3);
+        // for Age
+        const cell5 =Rowes.insertCell(4);
+       // here Is For Actions Where It will Span Two Columns
+        const cell6 =Rowes.insertCell(5);
+
+
+        // Add The Context OF the Cells Below
+
+        cell1.textContent=person.id;
+        cell2.textContent=person.first_name;
+        cell3.textContent=person.last_name;
+        cell4.textContent=person.age;
+        cell5.textContent=person.state;
+
+          //  "Edit" button
+          const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', () => openEditModal(person));
+                cell6.appendChild(editButton);
+
+                //  "Delete" button
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                cell6.appendChild(deleteButton);
+                editButton.style.backgroundColor = '#4caf50';
+deleteButton.style.backgroundColor='#ff0000';
+
+editButton.style.color = 'white';
+deleteButton.style.color= 'white';
+
+                deleteButton.addEventListener('click', () => {
+                // Show the delete confirmation modal
+                deleteModal.style.display = 'block';
+                // Set the ID of the person to delete
+                personToDeleteId = person.id;
+            });
+    });
+  
+
+}
+
+
+
+
+// POST METHOD AND CREATION
+
+        const createModal=document.getElementById('createModal')
+        const dataForm = document.getElementById('dataForm');
+        const closeCreateModal = document.getElementById('closeCreateModal');
+        const dataTableBody = document.getElementById('dataTableBody');
+        const deleteModal = document.getElementById('deletionModal');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        const cancelDeleteBtn = document.getElementById('cancelDelete'); 
+
+     
+
+        // Function to add a row to the table with "Edit" and "Delete" buttons
+        function addRowToTable(data) {
+            const row = dataTableBody.insertRow(0); // Insert a new row at the top of the table
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            const cell3 = row.insertCell(2);
+            const cell4 = row.insertCell(3);
+            const cell5 = row.insertCell(4);
+            const cell6 = row.insertCell(5);
+              
+           
+
+            cell1.innerHTML = data.id;
+            cell2.innerHTML = data.last_name;
+            cell3.innerHTML = data.first_name;
+            cell4.innerHTML = data.state;
+            cell5.innerHTML = data.age;
+
+            // Create "Edit" button
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.addEventListener('click', () => openEditModal(person));
+            cell6.appendChild(editButton);
+
+            // Create "Delete" button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            cell6.appendChild(deleteButton);
+
+            deleteButton.addEventListener('click', () => {
+                // Show the delete confirmation modal
+                deleteModal.style.display = 'block';
+                // Set the ID of the person to delete
+                personToDeleteId = data.id;
+            });
+         
+        }
+        // Handle form submission
+        dataForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData(dataForm);
+            const data = {
+                id: formData.get('id'),
+                last_name: formData.get('last_name'),
+                first_name: formData.get('first_name'),
+                state: formData.get('state'),
+                age: formData.get('age'),
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/v1/leute/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    addRowToTable(data); // Add the data to the table
+
+                    
+                    dataForm.reset(); // Clear the form
+
+                } else {
+                    console.error('Failed to save data to the API');
+                }
+            } catch (error) {
+                console.error('Error saving data to the API:', error);
+            }
+        });
+
+        // Add a click event listener to the "Create" button
+        const createFormButton = document.getElementById('createFormButton');
+        createFormButton.addEventListener('click', ()=>{
+            createModal.style.display='block';
+        });
+        closeCreateModal.addEventListener('click', () => {
+            createModal.style.display = 'none';
+        });
+
+        
+    
+        window.addEventListener('click', (event) => {
+            if (event.target === createModal) {
+                createModal.style.display = 'none';
+            }
+        });
+
+//PUT METHOD AND UPDATING
+
+  // Edit Modal handling
+  const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+
+        function openEditModal(person) {
+            // Fill the edit form with the person's data
+           document.getElementById('editid').value=person.id;
+            document.getElementById('editlast_name').value = person.last_name;
+            document.getElementById('editfirst_name').value = person.first_name;
+            document.getElementById('editstate').value = person.state;
+            document.getElementById('editage').value = person.age;
+
+            // Show the edit modal
+            editModal.style.display = 'block';
+        }
+    
+        window.addEventListener('click', (event) => {
+            if (event.target === editModal) {
+                editModal.style.display = 'none';
+            }
+        });
+        function closeEditModal() {
+            // Reset the edit form and hide the modal
+            editForm.reset();
+            editModal.style.display = 'none';
+        }
+
+        editForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            // Get the edited data from the form
+            const editedPerson = {
+                id: document.getElementById('editid').value,
+                last_name: document.getElementById('editlast_name').value,
+                first_name: document.getElementById('editfirst_name').value,
+                state: document.getElementById('editstate').value,
+                age: document.getElementById('editage').value,
+            };
+
+            try {
+                // Send the edited data to the API
+                const response = await fetch(`http://localhost:8080/api/v1/leute/update/id/${editedPerson.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(editedPerson),
+                });
+
+                if (response.ok) {
+                    // Update the table with the edited data
+                    updateTableRow(editedPerson);
+                    // Reset the edit form and hide the modal
+                    editForm.reset();
+                    editModal.style.display = 'none';
+                } else {
+                    console.error('Failed to save edited data to the API');
+                }
+            } catch (error) {
+                console.error('Error saving edited data to the API:', error);
+            }
+        });
+
+        function updateTableRow(editedPerson) {
+            const rows = document.getElementById('dataTableBody').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                if (cells[0].textContent === editedPerson.id) {
+                    cells[1].textContent = editedPerson.last_name;
+                    cells[2].textContent = editedPerson.first_name;
+                    cells[3].textContent = editedPerson.state;
+                    cells[4].textContent = editedPerson.age;
+                    break;
+                }
+            }
+        }
+//DELETION OPERATION
+
+
+  // Handle delete confirmation
+        confirmDeleteBtn.addEventListener('click', async () => {
+         
+    
+            const tableRows = dataTableBody.getElementsByTagName('tr');
+            for (const row of tableRows) {
+                if (row.cells[0].textContent === personToDeleteId) {
+                    row.remove();
+                    break;
+                }
+            }
+
+            // Delete the person from the API (replace 'API_ENDPOINT' with your actual API URL)
+            try {
+                const response = await fetch(`http://localhost:8080/api/v1/leute/delete/id/${personToDeleteId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    console.log('Person deleted from the API');
+                } else {
+                    console.error('Failed to delete person from the API');
+                }
+            } catch (error) {
+                console.error('Error deleting person from the API:', error);
+            }
+
+            // Hide the delete confirmation modal
+
+            deleteModal.style.display = 'none';
+        });
+    
+        window.addEventListener('click', (event) => {
+            if (event.target === deleteModal) {
+                deleteModal.style.display = 'none';
+            }
+        });
+
+        // Handle cancel delete button
+        cancelDeleteBtn.addEventListener('click', () => {
+            // Hide the delete confirmation modal
+            deleteModal.style.display = 'none';
+        });
+
+       
+        
+    </script>
+
+
+
+</body>
+</html>
